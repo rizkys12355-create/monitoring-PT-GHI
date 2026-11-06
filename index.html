@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dashboard Monitoring & Controlling</title>
+<style>
+:root{--bg:#f4f7fa;--card:#fff;--tx:#14263a;--mut:#64748b;--bd:#e2e8f0;--pri:#0f766e;--acc:#1e4f8c;--bad:#dc2626;--ok:#16a34a;--warn:#d97706;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1620;--card:#15222f;--tx:#e6edf3;--mut:#94a3b8;--bd:#25384a;--pri:#2dd4bf;--acc:#60a5fa}}
+:root[data-theme="dark"]{--bg:#0d1620;--card:#15222f;--tx:#e6edf3;--mut:#94a3b8;--bd:#25384a;--pri:#2dd4bf;--acc:#60a5fa}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,-apple-system,Arial,sans-serif;font-size:14px}
+header{background:linear-gradient(90deg,#0f766e,#1e4f8c);color:#fff;padding:20px 24px}
+header h1{margin:0;font-size:20px}header p{margin:4px 0 0;opacity:.85;font-size:13px}
+main{max-width:1180px;margin:0 auto;padding:18px}
+.grid{display:grid;gap:14px}.kpis{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px}
+.k small{color:var(--mut);font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+.k b{display:block;font-size:22px;margin:6px 0 2px}.k span{font-size:12px;color:var(--mut)}
+h2{font-size:15px;margin:0 0 12px}
+.two{grid-template-columns:repeat(auto-fit,minmax(340px,1fr));margin-top:14px}
+.bar{height:8px;background:var(--bd);border-radius:6px;overflow:hidden;margin-top:8px}.bar i{display:block;height:100%;background:var(--pri)}
+.wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{padding:7px 8px;text-align:right;border-bottom:1px solid var(--bd);white-space:nowrap}
+th{color:var(--mut);font-weight:600;position:sticky;top:0;background:var(--card)}th:first-child,td:first-child{text-align:left}
+input{width:96px;padding:4px 6px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--tx);text-align:right;font:inherit}
+.pill{padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.ok{background:var(--ok)}.wr{background:var(--warn)}.bd{background:var(--bad)}.na{background:var(--mut)}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--mut);margin-bottom:6px;flex-wrap:wrap}.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px}
+.risk{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd)}.risk:last-child{border:0}.risk small{color:var(--mut);display:block}
+button{background:var(--pri);color:#fff;border:0;border-radius:8px;padding:7px 12px;font:inherit;cursor:pointer}button.g{background:var(--bd);color:var(--tx)}
+.tools{display:flex;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap}.tools span{color:var(--mut);font-size:12px}
+footer{text-align:center;color:var(--mut);font-size:12px;padding:16px}
+svg text{fill:var(--mut);font-size:10px}
+</style>
+</head>
+<body>
+<header>
+<h1>Dashboard Monitoring &amp; Controlling – Coal &amp; Biomass Analysis PT GHI</h1>
+<p>Kontrak PT GHI – PT Sucofindo (Persero) · Agu 2026 – Jul 2028 · <span id="asof"></span></p>
+</header>
+<main>
+<div class="grid kpis" id="kpis"></div>
+
+<div class="grid two">
+<div class="card"><h2>Estimated vs Actual Value (Rp juta/bulan)</h2>
+<div class="legend"><span><i style="background:#1e4f8c"></i>Actual Value</span><span><i style="background:#dc2626"></i>Estimated</span><span><i style="background:#d97706"></i>Actual Cost</span></div>
+<svg id="ch1" viewBox="0 0 560 240" width="100%"></svg></div>
+<div class="card"><h2>Tonase Batubara Reguler vs Target (MT)</h2>
+<div class="legend"><span><i style="background:#0f766e"></i>Actual MT</span><span><i style="background:#dc2626"></i>Target 90.000</span></div>
+<svg id="ch2" viewBox="0 0 560 240" width="100%"></svg></div>
+</div>
+
+<div class="grid two">
+<div class="card"><h2>Komposisi Pendapatan (kumulatif)</h2><div id="mix"></div></div>
+<div class="card"><h2>Risiko Utama (Risk Register, K×D)</h2><div id="risks"></div></div>
+</div>
+
+<div class="card" style="margin-top:14px">
+<h2>Data Bulanan (klik angka untuk mengisi data bulan berjalan)</h2>
+<div class="tools"><button onclick="exp()">Export CSV</button><button class="g" onclick="rst()">Reset ke data awal</button><span>Data tersimpan otomatis di browser ini. Tarif: Reguler Rp870/MT · Hantaran BTBR Rp170.000 · Biomass Rp465.000.</span></div>
+<div class="wrap"><table id="tb"></table></div>
+</div>
+</main>
+<footer>Future Leadership Program 2026 – Group 3 · Sumber: Project Management Planning &amp; Monitoring_PT_GHI.xlsx</footer>
+
+<script>
+var EST=142807518,COST=117247552,TGT=90000,R1=870,R2=170000,R3=465000;
+var M=[];var mn=['Agu','Sep','Okt','Nov','Des','Jan','Feb','Mar','Apr','Mei','Jun','Jul'];
+for(var i=0;i<24;i++){var m=(7+i)%12,y=26+Math.floor((7+i)/12);M.push(mn[(m+0)%12===undefined?0:0]);}
+var NM=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+M=[];for(var i=0;i<24;i++){var k=7+i;M.push(NM[k%12]+' '+(26+Math.floor(k/12)));}
+var SEED=[[81348.8628,153,239,30],[100733.96,177,215,39],[97025.5,170,283,34]];
+var D=[];function init(){D=M.map(function(_,i){var s=SEED[i];return s?{mt:s[0],sp:s[1],bt:s[2],bm:s[3]}:{mt:0,sp:0,bt:0,bm:0}})}
+function load(){init();try{var s=localStorage.getItem('ghi_dash');if(s){var p=JSON.parse(s);if(p&&p.length===24)D=p}}catch(e){}}
+function save(){try{localStorage.setItem('ghi_dash',JSON.stringify(D))}catch(e){}}
+function val(d){return d.mt*R1+d.bt*R2+d.bm*R3}
+function act(d){return d.mt>0||d.bt>0||d.bm>0}
+var rp=function(n){return 'Rp '+Math.round(n).toLocaleString('id-ID')};
+var jt=function(n){return (n/1e6).toLocaleString('id-ID',{maximumFractionDigits:1})};
+function pill(p,a){if(!a)return '<span class="pill na">–</span>';return '<span class="pill '+(p>=1?'ok':p>=.9?'wr':'bd')+'">'+(p*100).toFixed(1)+'%</span>'}
+
+function render(){
+ var n=0,rv=0,cs=0,mt=0,v1=0,v2=0,v3=0;
+ D.forEach(function(d,i){if(act(d)){n++;rv+=val(d);cs+=COST;mt+=d.mt;v1+=d.mt*R1;v2+=d.bt*R2;v3+=d.bm*R3}});
+ var tg=EST*n,mg=rv-cs;
+ document.getElementById('asof').textContent='Data s/d '+(n?M[n-1]:'-')+' · Bulan berjalan '+n+' dari 24';
+ var K=[['Pendapatan Aktual',rp(rv),'Target s/d kini '+rp(tg)],
+  ['Biaya Aktual',rp(cs),n?(cs/rv*100).toFixed(1)+'% dari pendapatan':'-'],
+  ['Margin Kumulatif',rp(mg),n?(mg/rv*100).toFixed(1)+'% dari pendapatan':'-'],
+  ['Pencapaian vs Target',n?(rv/tg*100).toFixed(1)+'%':'-','Selisih '+rp(rv-tg)],
+  ['Progress Kontrak',(rv/(EST*24)*100).toFixed(1)+'%','dari total '+rp(EST*24)],
+  ['Tonase Aktual',Math.round(mt).toLocaleString('id-ID')+' MT','Target s/d kini '+(TGT*n).toLocaleString('id-ID')+' MT']];
+ document.getElementById('kpis').innerHTML=K.map(function(k,i){var bar=i==4?'<div class="bar"><i style="width:'+Math.min(100,rv/(EST*24)*100)+'%"></i></div>':'';
+  return '<div class="card k"><small>'+k[0]+'</small><b style="'+(i==2&&mg<0?'color:var(--bad)':'')+'">'+k[1]+'</b><span>'+k[2]+'</span>'+bar+'</div>'}).join('');
+ // mix
+ var tot=v1+v2+v3||1;
+ document.getElementById('mix').innerHTML=[['Batubara Reguler',v1,'#0f766e'],['Hantaran BTBR',v2,'#1e4f8c'],['Hantaran Biomass',v3,'#d97706']].map(function(x){
+  return '<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between"><span>'+x[0]+'</span><b>'+rp(x[1])+' · '+(x[1]/tot*100).toFixed(1)+'%</b></div><div class="bar"><i style="width:'+x[1]/tot*100+'%;background:'+x[2]+'"></i></div></div>'}).join('');
+ // table
+ var h='<tr><th>Periode</th><th>Est. Value</th><th>Actual Value</th><th>Actual Cost</th><th>Margin</th><th>% Capai</th><th>Tonase (MT)</th><th>Sampel</th><th>Hantaran BTBR</th><th>Biomass</th></tr>';
+ D.forEach(function(d,i){var a=act(d),v=val(d);
+  h+='<tr><td>'+M[i]+'</td><td>'+jt(EST)+' jt</td><td>'+(a?jt(v)+' jt':'–')+'</td><td>'+(a?jt(COST)+' jt':'–')+'</td><td style="color:'+(v-COST<0?'var(--bad)':'var(--ok)')+'">'+(a?jt(v-COST)+' jt':'–')+'</td><td>'+pill(v/EST,a)+'</td>'+
+  ['mt','sp','bt','bm'].map(function(f){return '<td><input type="number" min="0" step="any" value="'+(d[f]||'')+'" placeholder="0" onchange="ed('+i+',\''+f+'\',this.value)"></td>'}).join('')+'</tr>'});
+ document.getElementById('tb').innerHTML=h;
+ chart1();chart2();
+}
+function ed(i,f,v){D[i][f]=parseFloat(v)||0;save();render()}
+function rst(){if(confirm('Kembalikan ke data awal (Agu–Okt 26)?')){try{localStorage.removeItem('ghi_dash')}catch(e){}init();render()}}
+function exp(){var c='Periode,Estimated,ActualValue,ActualCost,Tonase,Sampel,HantaranBTBR,Biomass\n';D.forEach(function(d,i){c+=[M[i],EST,act(d)?val(d):0,act(d)?COST:0,d.mt,d.sp,d.bt,d.bm].join(',')+'\n'});
+ var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(c);a.download='monitoring_ghi.csv';a.click()}
+
+function draw(id,series,max,fmt,line1,line2){
+ var W=560,H=240,L=44,B=28,T=10,w=W-L-6,h=H-B-T,bw=w/24,s='';
+ for(var g=0;g<=4;g++){var y=T+h-h*g/4;s+='<line x1="'+L+'" x2="'+(W-6)+'" y1="'+y+'" y2="'+y+'" stroke="currentColor" opacity=".12"/><text x="'+(L-5)+'" y="'+(y+3)+'" text-anchor="end">'+fmt(max*g/4)+'</text>'}
+ series.forEach(function(v,i){var bh=v/max*h;s+='<rect x="'+(L+i*bw+bw*.18)+'" y="'+(T+h-bh)+'" width="'+bw*.64+'" height="'+bh+'" rx="2" fill="'+line1.c+'"><title>'+M[i]+': '+fmt(v)+'</title></rect>';
+  if(i%3==0)s+='<text x="'+(L+i*bw+bw/2)+'" y="'+(H-10)+'" text-anchor="middle">'+M[i].replace(' ','’')+'</text>'});
+ [line2].concat(line1.extra||[]).forEach(function(l){if(!l)return;var y=T+h-l.v/max*h;s+='<line x1="'+L+'" x2="'+(W-6)+'" y1="'+y+'" y2="'+y+'" stroke="'+l.c+'" stroke-width="1.8" stroke-dasharray="'+(l.d||'')+'"/>'});
+ document.getElementById(id).innerHTML=s}
+function chart1(){var v=D.map(function(d){return act(d)?val(d)/1e6:0});
+ draw('ch1',v,180,function(x){return Math.round(x)},{c:'#1e4f8c',extra:[{v:COST/1e6,c:'#d97706',d:'4 3'}]},{v:EST/1e6,c:'#dc2626'})}
+function chart2(){draw('ch2',D.map(function(d){return d.mt}),120000,function(x){return Math.round(x/1000)+'k'},{c:'#0f766e'},{v:TGT,c:'#dc2626'})}
+
+var RISK=[['Anggaran (RAB): lembur & rotasi di luar RAB','Biaya tak terduga ±Rp970 jt · Mitigasi: revisi RAB, kaji roster alternatif',20,'Maximum'],
+['Pendapatan di bawah RAB','Selisih ±Rp471 jt · Rekonsiliasi volume vs coal delivery plan',16,'Major'],
+['K3 area CHP & Laboratorium','Denda Pasal 9 & hak pemutusan · Safety induction, Stop Work Authority',15,'Major'],
+['Term of Payment: piutang terlambat','Tagihan tertahan ±Rp445 jt · Tagih maks. 10 hari kerja',12,'Major'],
+['CoA/CoW terbit > 3 hari','Denda keterlambatan PO maks. 10% · Pantau TAT harian',12,'Major']];
+document.getElementById('risks').innerHTML=RISK.map(function(r){return '<div class="risk"><div>'+r[0]+'<small>'+r[1]+'</small></div><div style="text-align:right"><span class="pill '+(r[2]>=20?'bd':'wr')+'">'+r[2]+'</span><small>'+r[3]+'</small></div></div>'}).join('');
+load();render();
+</script>
+</body>
+</html>
